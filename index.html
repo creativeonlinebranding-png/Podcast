@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Podcast Section • Premium Audio Player</title>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root{
+      --bg:#050510;
+      --panel:rgba(255,255,255,.06);
+      --stroke:rgba(255,255,255,.12);
+      --text:#f5f6ff;
+      --muted:#a7abcf;
+      --gold:#f5c76a;
+      --gold2:#d6b36a;
+      --shadow: 0 18px 60px rgba(0,0,0,.55);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1100px 700px at 10% 0%, rgba(245,199,106,.18), transparent 55%),
+        radial-gradient(900px 600px at 90% 10%, rgba(120,160,255,.14), transparent 55%),
+        radial-gradient(900px 700px at 50% 100%, rgba(214,179,106,.12), transparent 60%),
+        linear-gradient(180deg, #060613, #04040b 60%, #030309);
+      overflow-x:hidden;
+    }
+
+    /* Animated premium particles */
+    .fx{
+      position:fixed; inset:0; pointer-events:none; z-index:-1;
+      filter: blur(.2px);
+      opacity:.9;
+    }
+    .orb{
+      position:absolute; border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, rgba(245,199,106,.22), rgba(245,199,106,.03), transparent 65%);
+      animation: floaty 10s ease-in-out infinite;
+      mix-blend-mode: screen;
+    }
+    .orb:nth-child(1){width:420px;height:420px;left:-120px;top:-120px;animation-duration:12s}
+    .orb:nth-child(2){width:320px;height:320px;right:-90px;top:30px;animation-duration:14s;background: radial-gradient(circle at 30% 30%, rgba(110,170,255,.22), rgba(110,170,255,.03), transparent 65%);}
+    .orb:nth-child(3){width:520px;height:520px;left:20%;bottom:-260px;animation-duration:16s;background: radial-gradient(circle at 30% 30%, rgba(214,179,106,.18), rgba(214,179,106,.03), transparent 65%);}
+
+    @keyframes floaty{
+      0%,100%{transform: translate3d(0,0,0)}
+      50%{transform: translate3d(0,-18px,0)}
+    }
+
+    .wrap{
+      width:min(980px, 92vw);
+      margin: 28px auto 60px;
+    }
+
+    header{
+      display:flex; gap:16px; align-items:center; justify-content:space-between;
+      margin-bottom:18px;
+    }
+    .brand{
+      display:flex; flex-direction:column; gap:6px;
+    }
+    .title{
+      font-family:"Playfair Display", serif;
+      font-size: clamp(26px, 3.2vw, 40px);
+      letter-spacing:.4px;
+      margin:0;
+      line-height:1.1;
+    }
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size: 14px;
+      line-height:1.5;
+    }
+
+    .pill{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(145deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, var(--gold), rgba(245,199,106,.2));
+      box-shadow: 0 0 20px rgba(245,199,106,.35);
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{transform:scale(1);opacity:.9}
+      50%{transform:scale(1.25);opacity:1}
+    }
+    .pill span{font-size:13px;color:var(--muted)}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:16px;
+      margin-top:18px;
+    }
+
+    .card{
+      grid-column: span 12;
+      border:1px solid var(--stroke);
+      background: linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow:hidden;
+      position:relative;
+      transform: translateY(0);
+      transition: transform .25s ease, border-color .25s ease;
+    }
+    .card:hover{
+      transform: translateY(-4px);
+      border-color: rgba(245,199,106,.35);
+    }
+
+    .card::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: radial-gradient(600px 220px at 30% 0%, rgba(245,199,106,.18), transparent 60%),
+                  radial-gradient(520px 220px at 90% 20%, rgba(110,170,255,.14), transparent 60%);
+      opacity:.8;
+      pointer-events:none;
+    }
+
+    .card-inner{
+      position:relative;
+      display:grid;
+      grid-template-columns: 240px 1fr;
+      gap:14px;
+      padding:14px;
+    }
+
+    .thumb{
+      border-radius: 16px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.28);
+      position:relative;
+      min-height:170px;
+    }
+    .thumb img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit:cover;
+      transform: scale(1.02);
+      transition: transform .35s ease, filter .35s ease;
+      filter: contrast(1.05) saturate(1.05);
+    }
+    .card:hover .thumb img{transform: scale(1.07)}
+    .thumb::after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,.35));
+      pointer-events:none;
+    }
+
+    .content{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding:4px 2px 2px;
+    }
+
+    .hrow{
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    }
+    .hgroup{display:flex;flex-direction:column;gap:6px}
+    .hgroup h2{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+      line-height:1.25;
+    }
+    .meta{
+      display:flex; flex-wrap:wrap; gap:8px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+    .tag{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      padding:6px 10px;
+      border-radius:999px;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .tag b{color:var(--gold); font-weight:700}
+
+    .desc{
+      margin:0;
+      color:#dfe2ff;
+      opacity:.92;
+      font-size:13px;
+      line-height:1.6;
+    }
+
+    /* Wave animation bar */
+    .wave{
+      display:flex; gap:4px;
+      height:18px;
+      align-items:flex-end;
+      opacity:.85;
+      margin-top:2px;
+    }
+    .bar{
+      width:4px; border-radius:8px;
+      background: linear-gradient(180deg, rgba(245,199,106,.95), rgba(245,199,106,.15));
+      height: 6px;
+      animation: beat 1.1s ease-in-out infinite;
+    }
+    .bar:nth-child(2){animation-delay:.12s;height:10px}
+    .bar:nth-child(3){animation-delay:.24s;height:14px}
+    .bar:nth-child(4){animation-delay:.36s;height:8px}
+    .bar:nth-child(5){animation-delay:.48s;height:12px}
+    .bar:nth-child(6){animation-delay:.60s;height:7px}
+    .bar:nth-child(7){animation-delay:.72s;height:13px}
+    .bar:nth-child(8){animation-delay:.84s;height:9px}
+    @keyframes beat{
+      0%,100%{transform: scaleY(.75); opacity:.85}
+      50%{transform: scaleY(1.35); opacity:1}
+    }
+    .card.playing .bar{animation-duration:.85s}
+    .card.paused .bar{animation-play-state: paused; opacity:.5}
+
+    .player{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      padding-top:6px;
+    }
+
+    audio{
+      width:100%;
+      border-radius: 14px;
+      outline:none;
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,.25));
+    }
+
+    .controls{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .time{
+      color:var(--muted);
+      font-size:12px;
+      display:flex; align-items:center; gap:10px;
+    }
+
+    .btn{
+      cursor:pointer;
+      user-select:none;
+      text-decoration:none;
+      color: var(--text);
+      font-weight:600;
+      font-size:12px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      display:inline-flex; align-items:center; gap:10px;
+      transition: transform .18s ease, border-color .25s ease;
+    }
+    .btn:hover{transform: translateY(-2px); border-color: rgba(245,199,106,.38)}
+    .btn:active{transform: translateY(0)}
+    .btn .ico{
+      width:10px;height:10px;border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, var(--gold), rgba(245,199,106,.15));
+      box-shadow: 0 0 18px rgba(245,199,106,.25);
+    }
+
+    .footer{
+      margin-top:18px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+      border:1px dashed rgba(255,255,255,.14);
+      border-radius: 16px;
+      padding:14px 14px;
+      background: rgba(255,255,255,.03);
+    }
+    code{color:#ffdca0}
+
+    @media (max-width: 760px){
+      .card-inner{grid-template-columns: 1fr}
+      .thumb{min-height:190px}
+      .pill{display:none}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="fx" aria-hidden="true">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1 class="title">Podcast Section</h1>
+
+
+      <div class="pill">
+        <div class="dot"></div>
+        <span><b style="color:var(--gold)">Tip:</b> Only one audio plays at a time</span>
+      </div>
+    </header>
+
+    <div class="grid">
+
+      <!-- ===================== EPISODE 1 ===================== -->
+      <article class="card" data-audio-card>
+        <div class="card-inner">
+          <div class="thumb">
+            <img
+              src="https://i.postimg.cc/bJ5QgRmT/file-00000000758c722f9d6cd98af3e56775.png"
+              alt="Audio details screenshot"
+              loading="lazy"
+            />
+          </div>
+
+          <div class="content">
+            <div class="hrow">
+              <div class="hgroup">
+                <h2>The Most Beautiful Message From Jesus</h2>
+                <div class="meta">
+                  <span class="tag"><b>Podcast</b> • The Birth Of Jesus</span>
+                  <span class="tag">Format: <b>MP3</b></span>
+                </div>
+              </div>
+
+              <div class="wave" aria-hidden="true">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+              </div>
+            </div>
+
+            <p class="desc">
+              A meaningful reflection on the birth of Jesus Christ—hope, humility, and God’s promise revealed through His coming.
+            </p>
+
+            <div class="player">
+              <!-- IMPORTANT:
+                   Put this MP3 file in the SAME folder as this HTML on GitHub, then keep the filename exactly the same.
+                   Example repo: /docs/index.html and /docs/the_most_beautiful_message_from_jesus_mp3_5899.mp3
+              -->
+              <audio
+                controls
+                preload="metadata"
+                data-audio
+                src="the_birth_of_jesus_christ_christmas_story_for_kids_animated_children_s_bible_stories_holy_tales_mp3_81832.mp3">
+              </audio>
+
+              <div class="controls">
+                <div class="time">
+                  <span>Time:</span>
+                  <span data-current>0:00</span>
+                  <span style="opacity:.6">/</span>
+                  <span data-duration>0:00</span>
+                </div>
+
+                <a class="btn" href="the_birth_of_jesus_christ_christmas_story_for_kids_animated_children_s_bible_stories_holy_tales_mp3_81832.mp3" download>
+                  <span class="ico"></span> Download MP3
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ===================== EPISODE 2 ===================== -->
+      <article class="card" data-audio-card>
+        <div class="card-inner">
+          <div class="thumb">
+            <img
+              src="https://i.postimg.cc/59ZrN5f2/file-000000003b6471f5a969e947669fc673.png"
+              alt="Audio details screenshot"
+              loading="lazy"
+            />
+          </div>
+
+          <div class="content">
+            <div class="hrow">
+              <div class="hgroup">
+                <h2>Family Values</h2>
+                <div class="meta">
+                  <span class="tag"><b>Podcast</b> • Family Values</span>
+                  <span class="tag">Format: <b>MP3</b></span>
+                </div>
+              </div>
+
+              <div class="wave" aria-hidden="true">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+              </div>
+            </div>
+
+            <p class="desc">
+              A teaching on biblical family values—love, unity, respect, and faith as the foundation of a strong and God-centered home.
+            </p>
+
+            <div class="player">
+              <audio
+                controls
+                preload="metadata"
+                data-audio
+                src="fr_barron_comments_on_biblical_family_values_mp3_5762.mp3">
+              </audio>
+
+              <div class="controls">
+                <div class="time">
+                  <span>Time:</span>
+                  <span data-current>0:00</span>
+                  <span style="opacity:.6">/</span>
+                  <span data-duration>0:00</span>
+                </div>
+
+                <a class="btn" href="fr_barron_comments_on_biblical_family_values_mp3_5762.mp3" download>
+                  <span class="ico"></span> Download MP3
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- ===================== EPISODE 3 ===================== -->
+      <article class="card" data-audio-card>
+        <div class="card-inner">
+          <div class="thumb">
+            <img
+              src="https://i.postimg.cc/RZTpRjKH/file-00000000c6d0722f8ba07a224f6e3f2d.png"
+              alt="Audio details screenshot"
+              loading="lazy"
+            />
+          </div>
+
+          <div class="content">
+            <div class="hrow">
+              <div class="hgroup">
+                <h2>Relationships</h2>
+                <div class="meta">
+                  <span class="tag"><b>Podcast</b> • Family Values</span>
+                  <span class="tag">Format: <b>MP3</b></span>
+                </div>
+              </div>
+
+              <div class="wave" aria-hidden="true">
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+              </div>
+            </div>
+
+            <p class="desc">
+              A teaching on relationships—commitment, forgiveness, communication, and Christ-centered love as the foundation of healthy and lasting bonds.
+            </p>
+
+            <div class="player">
+              <audio
+                controls
+                preload="metadata"
+                data-audio
+                src="the_most_beautiful_message_from_jesus_mp3_5899.mp3">
+              </audio>
+
+              <div class="controls">
+                <div class="time">
+                  <span>Time:</span>
+                  <span data-current>0:00</span>
+                  <span style="opacity:.6">/</span>
+                  <span data-duration>0:00</span>
+                </div>
+
+                
+                 <a class="btn" href="the_most_beautiful_message_from_jesus_mp3_5899.mp3" download>
+                  <span class="ico"></span> Download MP3
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+
+    
+    </div>
+  </div>
+
+  <script>
+    // Premium behavior:
+    // 1) Only one audio plays at a time
+    // 2) Show current time / duration per card
+    // 3) Add "playing / paused" classes for wave animation
+    const audios = Array.from(document.querySelectorAll('[data-audio]'));
+
+    function fmt(t){
+      if(!isFinite(t)) return "0:00";
+      const m = Math.floor(t/60);
+      const s = Math.floor(t%60);
+      return m + ":" + String(s).padStart(2,"0");
+    }
+
+    function setCardState(audio, state){
+      const card = audio.closest('[data-audio-card]');
+      if(!card) return;
+      card.classList.remove('playing','paused');
+      card.classList.add(state);
+    }
+
+    // Stop all other audios when one starts
+    audios.forEach(a => {
+      a.addEventListener('play', () => {
+        audios.forEach(other => {
+          if(other !== a){
+            other.pause();
+            try{ other.currentTime = 0; }catch(e){}
+            setCardState(other, 'paused');
+          }
+        });
+        setCardState(a, 'playing');
+      });
+
+      a.addEventListener('pause', () => setCardState(a, 'paused'));
+      a.addEventListener('ended', () => setCardState(a, 'paused'));
+
+      a.addEventListener('loadedmetadata', () => {
+        const card = a.closest('[data-audio-card]');
+        if(!card) return;
+        const dur = card.querySelector('[data-duration]');
+        if(dur) dur.textContent = fmt(a.duration);
+      });
+
+      a.addEventListener('timeupdate', () => {
+        const card = a.closest('[data-audio-card]');
+        if(!card) return;
+        const cur = card.querySelector('[data-current]');
+        if(cur) cur.textContent = fmt(a.currentTime);
+      });
+
+      // Default wave is paused until play
+      setCardState(a, 'paused');
+    });
+  </script>
+</body>
+</html>
